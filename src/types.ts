@@ -14,6 +14,7 @@ export interface Practitioner {
   avatarGradient: string;
   badge: string;
   quote: string;
+  image?: string;
 }
 
 export type ProductCategory = 'facial' | 'toners' | 'body' | 'hair';
@@ -32,6 +33,7 @@ export interface Product {
   benefits: string[];
   textureOrPresentation: string;
   clinicalNote?: string;
+  image?: string;
 }
 
 export interface BrandInfo {

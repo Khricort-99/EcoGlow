@@ -13,6 +13,9 @@ import {
 import type { BookingPrefill } from '../types';
 import { allPractitionerNames, bookingHours, clinic, protocolNames } from '../data/cosmeticsData';
 
+const GOOGLE_SHEET_WEBHOOK_URL =
+  'https://script.google.com/macros/s/AKfycbzbT8pJc2F71cW0DN3m7siyfxMcsgD6e1SAbbHASML0PsR1Ii8UWVeqnj4FUfIpPPvVuA/exec';
+
 interface BookingModalProps {
   open: boolean;
   prefill: BookingPrefill | null;
@@ -44,12 +47,17 @@ const emptyForm: BookingForm = {
 export default function BookingModal({ open, prefill, onClose }: BookingModalProps) {
   const [form, setForm] = useState<BookingForm>(emptyForm);
   const [confirmed, setConfirmed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof BookingForm, boolean>>>({});
+  const [occupiedHours, setOccupiedHours] = useState<string[]>([]);
+  const [failure, setFailure] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setConfirmed(false);
     setErrors({});
+    setFailure(null);
+    setOccupiedHours([]);
 
     const notes: string[] = [];
     if (prefill?.productName) notes.push(`Consulta sobre el producto: ${prefill.productName}`);
@@ -65,11 +73,39 @@ export default function BookingModal({ open, prefill, onClose }: BookingModalPro
     });
   }, [open, prefill]);
 
+  // Consulta qué horas están ocupadas para una profesional y fecha determinadas
+  const checkAvailability = async (practitionerName: string, date: string) => {
+    const hasPractitioner = practitionerName && practitionerName !== 'Cualquier profesional';
+    if (!hasPractitioner || !date) {
+      setOccupiedHours([]);
+      return;
+    }
+    try {
+      const res = await fetch(
+        `${GOOGLE_SHEET_WEBHOOK_URL}?practitioner=${encodeURIComponent(practitionerName)}&date=${encodeURIComponent(date)}`
+      );
+      const result = await res.json();
+      if (result.status === 'success') {
+        const busy: string[] = Array.isArray(result.busyTimes) ? result.busyTimes : [];
+        setOccupiedHours(busy);
+        // Si la hora ya elegida quedó ocupada, se limpia para pedir otra
+        setForm((prev) => (prev.time && busy.includes(prev.time) ? { ...prev, time: '' } : prev));
+      }
+    } catch (error) {
+      console.error('Error al consultar disponibilidad:', error);
+    }
+  };
+
+  useEffect(() => {
+    checkAvailability(form.practitioner, form.date);
+  }, [form.practitioner, form.date]);
+
   const today = new Date().toISOString().split('T')[0];
 
   const setField = (field: keyof BookingForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: false }));
+    setFailure(null);
   };
 
   const validate = (): boolean => {
@@ -82,9 +118,60 @@ export default function BookingModal({ open, prefill, onClose }: BookingModalPro
     return Object.keys(next).length === 0;
   };
 
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (validate()) setConfirmed(true);
+  const submit = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+    if (!validate() || isSubmitting) return;
+    setIsSubmitting(true);
+    setFailure(null);
+
+    const payload = {
+      clientName: form.name,
+      clientPhone: form.phone,
+      clientEmail: form.email,
+      practitioner: form.practitioner,
+      service: form.service,
+      preferredDate: form.date,
+      preferredTime: form.time,
+      notes: form.notes,
+    };
+
+    let response: Response | null = null;
+    try {
+      // 'text/plain' evita el preflight de CORS y permite leer la respuesta del Apps Script
+      response = await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      // Si el CORS impide leer la respuesta, reenviamos en modo no-cors para no perder la cita
+      console.error('CORS al guardar cita, reintento no-cors:', error);
+      await fetch(GOOGLE_SHEET_WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    let result: { status?: string; busyTimes?: string[] } | null = null;
+    if (response) {
+      try {
+        result = await response.json();
+      } catch {
+        // Respuesta no legible como JSON: se asume que la cita se registró
+      }
+    }
+
+    if (result?.status === 'conflict') {
+      setFailure('Este horario acaba de ser reservado, por favor elige otra hora.');
+      setField('time', '');
+      checkAvailability(form.practitioner, form.date);
+    } else {
+      setConfirmed(true);
+    }
+
+    setIsSubmitting(false);
   };
 
   const close = () => {
@@ -293,18 +380,27 @@ export default function BookingModal({ open, prefill, onClose }: BookingModalPro
                         className={inputClass(errors.date)}
                       />
                     </FieldGroup>
-                    <FieldGroup label="Hora" required invalid={errors.time}>
+                    <FieldGroup
+                      label="Hora"
+                      required
+                      invalid={errors.time}
+                      message={failure ?? undefined}
+                    >
                       <select
                         value={form.time}
                         onChange={(e) => setField('time', e.target.value)}
                         className={inputClass(errors.time)}
                       >
                         <option value="">Hora…</option>
-                        {bookingHours.map((hour) => (
-                          <option key={hour} value={hour}>
-                            {hour}
-                          </option>
-                        ))}
+                        {bookingHours.map((hour) => {
+                          const isOccupied = occupiedHours.includes(hour);
+                          return (
+                            <option key={hour} value={hour} disabled={isOccupied}>
+                              {hour}
+                              {isOccupied && ' (Ocupado)'}
+                            </option>
+                          );
+                        })}
                       </select>
                     </FieldGroup>
                   </div>
@@ -340,10 +436,9 @@ export default function BookingModal({ open, prefill, onClose }: BookingModalPro
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (validate()) setConfirmed(true);
-                  }}
-                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-rose-600 px-5 text-sm font-semibold text-stone-50 transition-colors hover:bg-rose-700"
+                  onClick={() => submit()}
+                  disabled={isSubmitting}
+                  className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-rose-600 px-5 text-sm font-semibold text-stone-50 transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <CalendarCheck className="size-4" />
                   Solicitar reserva
@@ -361,11 +456,13 @@ function FieldGroup({
   label,
   required,
   invalid,
+  message,
   children,
 }: {
   label: string;
   required?: boolean;
   invalid?: boolean;
+  message?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -375,7 +472,11 @@ function FieldGroup({
         {required && <span className="text-rose-600">*</span>}
       </span>
       {children}
-      {invalid && <span className="mt-1 block text-[11px] text-rose-600">Este campo es obligatorio.</span>}
+      {(invalid || message) && (
+        <span className="mt-1 block text-[11px] text-rose-600">
+          {message ?? 'Este campo es obligatorio.'}
+        </span>
+      )}
     </label>
   );
 }

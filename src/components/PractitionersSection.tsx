@@ -1,4 +1,5 @@
 import { ArrowRight, BadgeCheck, Quote, Wrench } from 'lucide-react';
+import { useState } from 'react';
 import type { Practitioner } from '../types';
 import { practitioners } from '../data/cosmeticsData';
 
@@ -10,6 +11,23 @@ const gradientFallback = 'from-stone-200 to-stone-300';
 
 export default function PractitionersSection({ onBook }: PractitionersSectionProps) {
   const firstName = (name: string) => name.split(' ')[0];
+  const [brokenImages, setBrokenImages] = useState<string[]>([]);
+
+  const photo = (p: Practitioner) =>
+    p.image && !brokenImages.includes(p.image) ? (
+      <img
+        src={p.image}
+        alt={p.name}
+        onError={() => setBrokenImages((prev) => [...prev, p.image!])}
+        className="aspect-[4/5] w-full rounded-2xl bg-stone-200 object-cover object-top"
+      />
+    ) : (
+      <div
+        className={`flex aspect-[4/5] w-full items-center justify-center rounded-2xl bg-gradient-to-br ${p.avatarGradient || gradientFallback} font-display text-4xl font-semibold text-stone-800`}
+      >
+        {p.initials}
+      </div>
+    );
 
   return (
     <section id="practicantes" className="bg-white py-20 sm:py-28">
@@ -33,23 +51,18 @@ export default function PractitionersSection({ onBook }: PractitionersSectionPro
               key={p.id}
               className="flex flex-col rounded-3xl border border-stone-200 bg-stone-50 p-7 transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`flex size-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${p.avatarGradient || gradientFallback} font-display text-lg font-semibold text-stone-800`}
+              <div className="mx-auto w-full">{photo(p)}</div>
+
+              <div className="mt-5 text-center">
+                <h3 className="font-display text-xl font-semibold text-stone-900">{p.name}</h3>
+                <span
+                  className={`mt-2 inline-block rounded-full border bg-white px-2.5 py-0.5 text-[11px] font-semibold text-stone-600 ${gradientFallback.replace('bg-', 'border-')}`}
                 >
-                  {p.initials}
-                </div>
-                <div>
-                  <h3 className="font-display text-xl font-semibold text-stone-900">{p.name}</h3>
-                  <span
-                    className={`mt-1 inline-block rounded-full border bg-white px-2.5 py-0.5 text-[11px] font-semibold text-stone-600 ${gradientFallback.replace('bg-', 'border-')}`}
-                  >
-                    {p.badge}
-                  </span>
-                </div>
+                  {p.badge}
+                </span>
               </div>
 
-              <p className="mt-3 text-[11px] leading-snug font-medium tracking-wide text-stone-500 uppercase">
+              <p className="mt-3 text-center text-[11px] leading-snug font-medium tracking-wide text-stone-500 uppercase">
                 {p.role}
               </p>
               <p className="mt-3 text-sm leading-relaxed text-stone-600">{p.currentSituation}</p>

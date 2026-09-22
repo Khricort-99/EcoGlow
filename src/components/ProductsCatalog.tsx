@@ -141,6 +141,8 @@ function ProductCard({
   onBookProduct: (product: Product) => void;
 }) {
   const brand = brandById(product.brandId);
+  const [imageBroken, setImageBroken] = useState(false);
+  const imageSrc = product.image ?? `${import.meta.env.BASE_URL}products/${product.id}.jpg`;
 
   return (
     <article className="flex flex-col rounded-3xl border border-stone-200 bg-stone-50 p-6 transition-transform duration-300 hover:-translate-y-1">
@@ -151,6 +153,22 @@ function ProductCard({
         <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold tracking-wide text-stone-500 uppercase">
           {product.categoryLabel} · {product.subcategory}
         </span>
+      </div>
+
+      <div className="mt-4 flex min-h-52 items-center justify-center overflow-hidden rounded-2xl border border-stone-200 bg-white">
+        {!imageBroken ? (
+          <img
+            src={imageSrc}
+            alt={product.name}
+            onError={() => setImageBroken(true)}
+            className="max-h-52 w-full object-contain p-4"
+          />
+        ) : (
+          <div className="flex flex-col items-center gap-2 p-6 text-center">
+            <Droplets className="size-8 text-stone-300" />
+            <p className="text-xs font-medium text-stone-400">Imagen próximamente</p>
+          </div>
+        )}
       </div>
 
       <h3 className="font-display mt-4 text-xl leading-snug font-semibold text-stone-900">

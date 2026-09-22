@@ -74,6 +74,7 @@ export const practitioners: Practitioner[] = [
     badge: 'Cosmetología Facial y Corporal',
     quote:
       'Cada piel tiene su propio lenguaje. Mi labor es escucharla y transformarla con técnica y cuidado.',
+    image: `${import.meta.env.BASE_URL}practitioners/nayareth.jpg.jpeg`,
   },
   {
     id: 'paz',
@@ -101,6 +102,7 @@ export const practitioners: Practitioner[] = [
     badge: 'Estética & Bienestar Holístico',
     quote:
       'La relajación es medicina silenciosa: cuando el cuerpo se aquieta, la piel lo agradece.',
+    image: `${import.meta.env.BASE_URL}practitioners/paz.jpg.jpeg`,
   },
   {
     id: 'catalina',
@@ -126,6 +128,7 @@ export const practitioners: Practitioner[] = [
     avatarGradient: 'from-rose-200 via-fuchsia-50 to-purple-200',
     badge: 'Dermocosmética & Diagnóstico',
     quote: 'Un buen diagnóstico ya es la mitad del tratamiento.',
+    image: `${import.meta.env.BASE_URL}practitioners/catalina.jpg.jpeg`,
   },
 ];
 
