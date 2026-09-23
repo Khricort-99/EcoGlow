@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import type { BookingPrefill } from '../types';
-import { allPractitionerNames, bookingHours, clinic, protocolNames } from '../data/cosmeticsData';
+import { allPractitionerNames, allPractitioners, bookingHours, clinic, protocolNames } from '../data/cosmeticsData';
 
 const GOOGLE_SHEET_WEBHOOK_URL =
   'https://script.google.com/macros/s/AKfycbzbT8pJc2F71cW0DN3m7siyfxMcsgD6e1SAbbHASML0PsR1Ii8UWVeqnj4FUfIpPPvVuA/exec';
@@ -191,7 +191,9 @@ export default function BookingModal({ open, prefill, onClose }: BookingModalPro
       `Hora: ${form.time}`,
       form.notes ? `Observaciones:\n${form.notes}` : '',
     ].filter(Boolean);
-    return `https://wa.me/${clinic.whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
+    const practitioner = allPractitioners.find((p) => p.name === form.practitioner);
+    const whatsappNumber = practitioner?.whatsappNumber ?? clinic.whatsappNumber;
+    return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
   };
 
   const inputClass = (invalid?: boolean) =>

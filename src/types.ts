@@ -15,6 +15,7 @@ export interface Practitioner {
   badge: string;
   quote: string;
   image?: string;
+  whatsappNumber?: string;
 }
 
 export type ProductCategory = 'facial' | 'toners' | 'body' | 'hair';

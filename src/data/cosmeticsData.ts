@@ -35,9 +35,9 @@ export const clinic = {
   name: 'EcoGlow',
   fullName: 'EcoGlow · Centro de Estética & Dermocosmética',
   whatsappNumber: '56912345678',
-  address: 'Av. Providencia 1234, Oficina 502, Santiago, Chile',
+  address: 'Av. Providencia 1234, Oficina 502, La Serena, Chile',
   schedule: ['Lunes a Viernes: 09:00 – 19:00 h', 'Sábados: 10:00 – 15:00 h'],
-  email: 'contacto@ecoglow.cl',
+  email: 'ecoglow.cosmeticc@gmail.com',
   supervision:
     'Todos los protocolos son realizados por practicantes en formación bajo permanente supervisión profesional y estrictos controles de bioseguridad.',
 };
@@ -75,6 +75,7 @@ export const practitioners: Practitioner[] = [
     quote:
       'Cada piel tiene su propio lenguaje. Mi labor es escucharla y transformarla con técnica y cuidado.',
     image: `${import.meta.env.BASE_URL}practitioners/nayareth.jpg.jpeg`,
+    whatsappNumber: '56985439595',
   },
   {
     id: 'paz',
@@ -103,6 +104,7 @@ export const practitioners: Practitioner[] = [
     quote:
       'La relajación es medicina silenciosa: cuando el cuerpo se aquieta, la piel lo agradece.',
     image: `${import.meta.env.BASE_URL}practitioners/paz.jpg.jpeg`,
+    whatsappNumber: '56946737430',
   },
   {
     id: 'catalina',
@@ -129,10 +131,12 @@ export const practitioners: Practitioner[] = [
     badge: 'Dermocosmética & Diagnóstico',
     quote: 'Un buen diagnóstico ya es la mitad del tratamiento.',
     image: `${import.meta.env.BASE_URL}practitioners/catalina.jpg.jpeg`,
+    whatsappNumber: '56922023750',
   },
 ];
 
 export const allPractitionerNames = practitioners.map((p) => p.name);
+export const allPractitioners = practitioners;
 
 /* ------------------------------------------------------------------ */
 /* B. Laboratorios y marcas aliadas                                    */
