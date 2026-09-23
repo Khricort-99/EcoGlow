@@ -19,7 +19,7 @@ export default function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 pt-16 pb-16 sm:px-6 sm:pt-24 sm:pb-24 lg:px-8">
         <span className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-1.5 text-xs font-semibold tracking-wide text-stone-600">
           <span className="size-1.5 rounded-full bg-emerald-500" />
-          Centro de Estética &amp; Dermocosmética · Santiago, Chile
+          Centro de Estética &amp; Dermocosmética · La Serena, Chile
         </span>
 
         <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.2fr_0.8fr]">
